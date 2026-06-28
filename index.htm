@@ -3,98 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>H4SX STORE — Ultimate Receipt Generator v4</title>
+    <title>H4SX STORE — Penjana Resit</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Reenie+Beanie&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+
     <style>
+        :root {
+            --ink: #05070d;
+            --panel: #0c1018;
+            --panel-soft: #11161f;
+            --line: rgba(148, 178, 255, 0.14);
+            --accent: #5eead4;
+            --accent-soft: rgba(94, 234, 212, 0.12);
+            --accent2: #f472b6;
+            --text: #eef2ff;
+            --text-dim: #8993ad;
+        }
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #050814;
-            background-image: radial-gradient(circle at top right, rgba(0, 240, 255, 0.05), transparent 40%),
-                              radial-gradient(circle at bottom left, rgba(255, 0, 127, 0.03), transparent 40%);
-            color: #f8fafc;
+            font-family: 'Sora', sans-serif;
+            background-color: var(--ink);
+            background-image:
+                radial-gradient(circle at 15% 0%, rgba(94, 234, 212, 0.07), transparent 45%),
+                radial-gradient(circle at 85% 100%, rgba(244, 114, 182, 0.05), transparent 45%);
+            color: var(--text);
         }
-        .cyber-title {
-            font-family: 'Orbitron', sans-serif;
-            letter-spacing: 1px;
-            text-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
-        }
+        .mono { font-family: 'Space Mono', monospace; }
         .signature-text {
-            font-family: 'Reenie Beanie', cursive;
-            font-size: 2.8rem;
-            transform: rotate(-4deg);
+            font-family: 'Caveat', cursive;
+            font-size: 2.4rem;
+            transform: rotate(-3deg);
             line-height: 1;
         }
-        .neon-card {
-            box-shadow: 0 0 25px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 240, 255, 0.05);
-            border: 2px solid rgba(0, 240, 255, 0.25);
+        .panel {
+            background: linear-gradient(180deg, var(--panel), #080a10);
+            border: 1px solid var(--line);
+        }
+        .field {
+            background: #060810;
+            border: 1px solid var(--line);
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+        .field:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+        .btn {
+            transition: transform .12s ease, filter .12s ease;
+        }
+        .btn:hover { filter: brightness(1.08); }
+        .btn:active { transform: scale(0.98); }
+
+        #receiptCard {
+            border: 1px solid var(--line);
+            box-shadow: 0 0 0 1px rgba(94,234,212,0.06), 0 30px 60px -20px rgba(0,0,0,0.6);
+        }
+        .stub-row::before {
+            content: "";
+            position: absolute;
+            left: 0; right: 0; top: 0;
+            height: 1px;
+            background-image: repeating-linear-gradient(to right, var(--line) 0, var(--line) 6px, transparent 6px, transparent 12px);
+        }
+        .seal {
+            border: 1px solid rgba(94, 234, 212, 0.35);
+            background: var(--accent-soft);
         }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0b0f19; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #1e2638; border-radius: 4px; }
+
+        .upload-drop {
+            border: 1px dashed var(--line);
+            transition: border-color .15s ease, background-color .15s ease;
+        }
+        .upload-drop.dragover {
+            border-color: var(--accent);
+            background-color: var(--accent-soft);
+        }
+        .seg-btn { transition: background-color .15s ease, color .15s ease; }
+        .seg-btn.active { background: var(--accent); color: #052e2a; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8 flex flex-col items-center justify-center relative overflow-x-hidden">
 
     <div id="toastNotification" class="fixed top-6 right-6 z-50 transform translate-x-80 opacity-0 transition-all duration-300 pointer-events-none">
-        <div id="toastBorder" class="bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500 rounded-2xl p-4 shadow-2xl flex items-center gap-4 max-w-sm">
-            <div id="toastIconBg" class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-lg shrink-0">
+        <div id="toastBorder" class="bg-[#0c1018]/95 backdrop-blur-md border border-emerald-400/40 rounded-2xl p-4 shadow-2xl flex items-start gap-3 max-w-sm">
+            <div id="toastIconBg" class="w-9 h-9 rounded-xl bg-emerald-400/15 flex items-center justify-center text-emerald-300 text-sm shrink-0 mt-0.5">
                 <i id="toastIcon" class="fa-solid fa-circle-check"></i>
             </div>
             <div>
-                <h4 id="toastTitle" class="text-sm font-bold text-white uppercase tracking-wider">SUCCESS</h4>
-                <p id="toastMessage" class="text-xs text-slate-300 mt-0.5">Mesej di sini...</p>
+                <h4 id="toastTitle" class="text-sm font-bold text-white">Berjaya</h4>
+                <p id="toastMessage" class="text-xs text-slate-400 mt-0.5 leading-relaxed">Mesej di sini...</p>
             </div>
         </div>
     </div>
 
-    <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        
-        <div class="lg:col-span-5 bg-slate-900/80 backdrop-blur-md border border-slate-800 p-6 rounded-2xl shadow-2xl space-y-5">
+    <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+        <div class="lg:col-span-5 panel p-6 rounded-2xl shadow-2xl space-y-5">
             <div>
-                <h1 class="text-xl font-black text-cyan-400 tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> H4SX STORE
+                <h1 class="text-lg font-extrabold text-white tracking-tight flex items-center gap-2">
+                    <span class="text-emerald-300"><i class="fa-solid fa-receipt"></i></span> H4SX STORE
                 </h1>
-                <p class="text-xs text-slate-400 mt-1">Sistem Penjana Resit (Auto-Save Active)</p>
+                <p class="text-xs text-slate-500 mt-1">Penjana resit jualan — auto-simpan dalam pelayar ini</p>
             </div>
-            
-            <hr class="border-slate-800">
+
+            <hr class="border-white/5">
 
             <div class="space-y-4 text-sm">
                 <div>
-                    <label class="block text-slate-400 font-medium mb-1">Nama Pembeli / Username</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-user absolute left-3 top-3 text-slate-500 text-xs"></i>
-                        <input type="text" id="inputUser" class="w-full bg-slate-950/60 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-slate-200 focus:outline-none focus:border-cyan-500">
-                    </div>
+                    <label class="block text-slate-400 font-medium mb-1.5 text-xs uppercase tracking-wide">Nama Pembeli / Username</label>
+                    <input type="text" id="inputUser" class="w-full field rounded-lg px-3 py-2.5 text-slate-100">
                 </div>
 
                 <div>
-                    <label class="block text-slate-400 font-medium mb-1">Nama Game</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-gamepad absolute left-3 top-3 text-slate-500 text-xs"></i>
-                        <input type="text" id="inputGame" class="w-full bg-slate-950/60 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-slate-200 focus:outline-none focus:border-cyan-500">
-                    </div>
+                    <label class="block text-slate-400 font-medium mb-1.5 text-xs uppercase tracking-wide">Nama Game</label>
+                    <input type="text" id="inputGame" class="w-full field rounded-lg px-3 py-2.5 text-slate-100">
                 </div>
 
                 <div>
-                    <label class="block text-slate-400 font-medium mb-1">Butiran Item / Deskripsi</label>
-                    <textarea id="inputDesc" rows="2" class="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-cyan-500"></textarea>
+                    <label class="block text-slate-400 font-medium mb-1.5 text-xs uppercase tracking-wide">Butiran Item / Deskripsi</label>
+                    <textarea id="inputDesc" rows="2" class="w-full field rounded-lg px-3 py-2.5 text-slate-100"></textarea>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-slate-400 font-medium mb-1">Harga</label>
-                        <input type="number" id="inputPrice" step="0.01" class="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-cyan-500">
+                        <label class="block text-slate-400 font-medium mb-1.5 text-xs uppercase tracking-wide">Harga</label>
+                        <input type="number" id="inputPrice" step="0.01" class="w-full field rounded-lg px-3 py-2.5 text-slate-100">
                     </div>
                     <div>
-                        <label class="block text-slate-400 font-medium mb-1">Mata Wang</label>
-                        <select id="inputCurrency" class="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-cyan-500">
+                        <label class="block text-slate-400 font-medium mb-1.5 text-xs uppercase tracking-wide">Mata Wang</label>
+                        <select id="inputCurrency" class="w-full field rounded-lg px-3 py-2.5 text-slate-100">
                             <option value="RM">RM (Malaysia)</option>
                             <option value="USD">USD (Dollar)</option>
                             <option value="RP">RP (Rupiah)</option>
@@ -103,91 +147,109 @@
                 </div>
 
                 <div>
-                    <label class="block text-slate-400 font-medium mb-1">URL Gambar Latar Belakang Anime</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-link absolute left-3 top-3 text-slate-500 text-xs"></i>
-                        <input type="text" id="inputBg" placeholder="Masukkan link imej anime pilihan anda" class="w-full bg-slate-950/60 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-slate-200 focus:outline-none focus:border-cyan-500 text-xs">
+                    <label class="block text-slate-400 font-medium mb-1.5 text-xs uppercase tracking-wide">Gambar Latar Belakang</label>
+
+                    <div class="flex gap-1.5 mb-2 bg-[#060810] border border-white/10 rounded-lg p-1 w-fit">
+                        <button type="button" id="segUpload" class="seg-btn active text-xs font-semibold px-3 py-1.5 rounded-md">Muat Naik</button>
+                        <button type="button" id="segUrl" class="seg-btn text-xs font-semibold px-3 py-1.5 rounded-md text-slate-400">Link URL</button>
                     </div>
+
+                    <div id="uploadPane">
+                        <label for="inputBgFile" id="uploadDrop" class="upload-drop rounded-lg flex flex-col items-center justify-center gap-1.5 py-5 cursor-pointer text-slate-400 hover:text-slate-300">
+                            <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                            <span class="text-xs">Klik atau seret gambar ke sini</span>
+                            <span id="fileNameLabel" class="text-[11px] text-emerald-300 mono"></span>
+                        </label>
+                        <input type="file" id="inputBgFile" accept="image/*" class="hidden">
+                        <p class="text-[11px] text-slate-500 mt-1.5">Disyorkan — elak masalah copy/download imej.</p>
+                    </div>
+
+                    <div id="urlPane" class="hidden">
+                        <input type="text" id="inputBg" placeholder="https://..." class="w-full field rounded-lg px-3 py-2.5 text-slate-100 text-xs mono">
+                        <p class="text-[11px] text-amber-400/80 mt-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Sumber luar tanpa CORS akan gagalkan copy &amp; download. Guna "Muat Naik" jika ini berlaku.</p>
+                    </div>
+
+                    <button type="button" id="clearBgBtn" class="text-[11px] text-slate-500 hover:text-slate-300 mt-2 hidden">Buang gambar latar</button>
                 </div>
             </div>
 
             <div class="pt-2 space-y-2.5">
-                <button onclick="resetAndGenerateNew()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 px-4 rounded-xl shadow transition flex items-center justify-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-rotate"></i> Generate Kod Resit Baru
-                </button>
-                
-                <button onclick="copyReceiptImage()" class="w-full bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-bold py-2.5 px-4 rounded-xl shadow transition flex items-center justify-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-copy"></i> Copy Gambar ke Clipboard
+                <button onclick="resetAndGenerateNew()" class="btn w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow flex items-center justify-center gap-2 cursor-pointer text-sm">
+                    <i class="fa-solid fa-rotate"></i> Jana Kod Resit Baharu
                 </button>
 
-                <button onclick="downloadReceiptImage()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl shadow transition flex items-center justify-center gap-2 cursor-pointer">
+                <button onclick="copyReceiptImage()" id="copyImgBtn" class="btn w-full bg-pink-500/90 hover:bg-pink-500 text-white font-semibold py-2.5 px-4 rounded-xl shadow flex items-center justify-center gap-2 cursor-pointer text-sm">
+                    <i class="fa-solid fa-copy"></i> Salin Gambar ke Clipboard
+                </button>
+
+                <button onclick="downloadReceiptImage()" class="btn w-full bg-indigo-500/90 hover:bg-indigo-500 text-white font-semibold py-2.5 px-4 rounded-xl shadow flex items-center justify-center gap-2 cursor-pointer text-sm">
                     <i class="fa-solid fa-download"></i> Muat Turun Gambar (PNG)
                 </button>
 
-                <button onclick="copyToClipboard()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl shadow transition flex items-center justify-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-file-lines"></i> Copy Teks Butiran Resit
+                <button onclick="copyToClipboard()" class="btn w-full bg-emerald-500/90 hover:bg-emerald-500 text-[#052e2a] font-semibold py-2.5 px-4 rounded-xl shadow flex items-center justify-center gap-2 cursor-pointer text-sm">
+                    <i class="fa-solid fa-file-lines"></i> Salin Teks Butiran Resit
                 </button>
             </div>
         </div>
 
         <div class="lg:col-span-7 w-full flex justify-center">
-            
-            <div id="receiptCard" class="w-full max-w-md bg-slate-950 neon-card rounded-3xl p-8 relative overflow-hidden transition-all duration-300 bg-cover bg-center">
-                <div id="bgOverlay" class="absolute inset-0 bg-slate-950/92 z-0 transition-opacity duration-300"></div>
+
+            <div id="receiptCard" class="w-full max-w-md bg-[#080a10] rounded-3xl p-8 relative overflow-hidden transition-all duration-300 bg-cover bg-center">
+                <div id="bgOverlay" class="absolute inset-0 bg-[#080a10]/93 z-0 transition-opacity duration-300"></div>
 
                 <div class="relative z-10 space-y-5">
-                    <div class="text-center space-y-1">
-                        <div class="text-[10px] uppercase tracking-widest text-fuchsia-500 font-black">TRANSAKSI DISAHKAN</div>
-                        <h2 class="text-2xl font-black text-white tracking-wider cyber-title">RESIT RASMI<br>H4SX STORE</h2>
-                        <div class="text-xs text-slate-400 font-medium tracking-wide flex items-center justify-center gap-1.5 pt-0.5">
-                            <i class="fa-solid fa-globe text-cyan-400 text-[10px]"></i> h4sx-store.vercel.app
+                    <div class="text-center space-y-1.5">
+                        <div class="text-[10px] uppercase tracking-[0.2em] text-emerald-300 font-bold">Resit Jualan</div>
+                        <h2 class="text-2xl font-extrabold text-white tracking-tight">H4SX STORE</h2>
+                        <div class="text-xs text-slate-500 font-medium flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-globe text-emerald-300 text-[10px]"></i> h4sx-store.vercel.app
                         </div>
                     </div>
 
-                    <div class="border-b border-dashed border-cyan-500/20 my-2"></div>
+                    <div class="relative pt-3 stub-row"></div>
 
-                    <div class="grid grid-cols-2 gap-4 text-xs">
-                        <div class="bg-slate-900/60 border border-slate-800/80 p-2.5 rounded-xl">
-                            <span class="block text-[10px] text-slate-400 uppercase tracking-wider mb-0.5"><i class="fa-solid fa-hashtag text-cyan-500 mr-1"></i>Kod TX</span>
-                            <span id="resitCode" class="font-mono font-bold text-white text-sm">H4SX-XXXXXX</span>
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div class="bg-white/[0.03] border border-white/[0.06] p-3 rounded-xl">
+                            <span class="block text-[10px] text-slate-500 uppercase tracking-wide mb-1">Kod TX</span>
+                            <span id="resitCode" class="font-bold text-white text-sm mono">H4SX-XXXXXX</span>
                         </div>
-                        <div class="bg-slate-900/60 border border-slate-800/80 p-2.5 rounded-xl">
-                            <span class="block text-[10px] text-slate-400 uppercase tracking-wider mb-0.5"><i class="fa-solid fa-calendar-alt text-fuchsia-500 mr-1"></i>Tarikh Jualan</span>
-                            <span id="resitDate" class="font-medium text-slate-200">--/--/----</span>
+                        <div class="bg-white/[0.03] border border-white/[0.06] p-3 rounded-xl">
+                            <span class="block text-[10px] text-slate-500 uppercase tracking-wide mb-1">Tarikh Jualan</span>
+                            <span id="resitDate" class="font-semibold text-slate-200 mono">--/--/----</span>
                         </div>
-                        <div class="bg-slate-900/60 border border-slate-800/80 p-2.5 rounded-xl">
-                            <span class="block text-[10px] text-slate-400 uppercase tracking-wider mb-0.5"><i class="fa-solid fa-user-check text-cyan-500 mr-1"></i>User / Buyer</span>
+                        <div class="bg-white/[0.03] border border-white/[0.06] p-3 rounded-xl">
+                            <span class="block text-[10px] text-slate-500 uppercase tracking-wide mb-1">Pembeli</span>
                             <span id="resitUser" class="font-bold text-slate-200 truncate block">-</span>
                         </div>
-                        <div class="bg-slate-900/60 border border-slate-800/80 p-2.5 rounded-xl">
-                            <span class="block text-[10px] text-slate-400 uppercase tracking-wider mb-0.5"><i class="fa-solid fa-gamepad text-fuchsia-500 mr-1"></i>Kategori Game</span>
-                            <span id="resitGame" class="font-bold text-cyan-400 truncate block">-</span>
+                        <div class="bg-white/[0.03] border border-white/[0.06] p-3 rounded-xl">
+                            <span class="block text-[10px] text-slate-500 uppercase tracking-wide mb-1">Game</span>
+                            <span id="resitGame" class="font-bold text-emerald-300 truncate block">-</span>
                         </div>
                     </div>
 
-                    <div class="bg-slate-900/50 backdrop-blur-sm border border-slate-800/80 p-4 rounded-xl space-y-1.5">
-                        <span class="block text-[10px] text-slate-400 uppercase tracking-wider font-bold">Deskripsi Item Penjualan</span>
+                    <div class="bg-white/[0.03] border border-white/[0.06] p-4 rounded-xl space-y-1.5">
+                        <span class="block text-[10px] text-slate-500 uppercase tracking-wide font-bold">Item / Perkhidmatan</span>
                         <p id="resitDesc" class="text-xs text-slate-200 font-medium leading-relaxed">-</p>
                     </div>
 
-                    <div class="flex justify-between items-center bg-gradient-to-r from-cyan-950/40 to-slate-900/60 border border-cyan-500/30 p-4 rounded-xl">
-                        <span class="text-xs text-cyan-400 uppercase tracking-widest font-black">Jumlah Bayaran</span>
-                        <span id="resitPrice" class="text-2xl font-black text-white font-mono tracking-tight">RM 0.00</span>
+                    <div class="flex justify-between items-center bg-gradient-to-r from-emerald-400/10 to-transparent border border-emerald-400/25 p-4 rounded-xl">
+                        <span class="text-xs text-emerald-300 uppercase tracking-wide font-bold">Jumlah Bayaran</span>
+                        <span id="resitPrice" class="text-2xl font-extrabold text-white mono tracking-tight">RM 0.00</span>
                     </div>
 
-                    <div class="grid grid-cols-2 items-end pt-2">
-                        <div class="flex items-center gap-2 border border-emerald-500/30 bg-emerald-950/20 p-2 rounded-xl max-w-[170px]">
-                            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs shrink-0">
-                                <i class="fa-solid fa-shield-halved animate-pulse"></i>
+                    <div class="grid grid-cols-2 items-end pt-1">
+                        <div class="flex items-center gap-2 seal p-2 rounded-xl max-w-[160px]">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-400/15 flex items-center justify-center text-emerald-300 text-xs shrink-0">
+                                <i class="fa-solid fa-check"></i>
                             </div>
                             <div class="leading-none">
-                                <span class="text-[9px] font-black text-emerald-400 block tracking-wider">VERIFIED</span>
-                                <span class="text-[8px] text-slate-400 block mt-0.5">& Secure Seal</span>
+                                <span class="text-[9px] font-bold text-emerald-300 block tracking-wide">DIBAYAR</span>
+                                <span class="text-[8px] text-slate-500 block mt-0.5">Direkodkan</span>
                             </div>
                         </div>
                         <div class="text-right">
-                            <span class="block text-[9px] text-slate-400 uppercase tracking-wider mb-1">Diverifikasi Oleh:</span>
-                            <div class="signature-text text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] select-none">
+                            <span class="block text-[9px] text-slate-500 uppercase tracking-wide mb-1">Dikeluarkan Oleh</span>
+                            <div class="signature-text text-emerald-300 select-none">
                                 H4SX Store
                             </div>
                         </div>
@@ -199,14 +261,14 @@
     </div>
 
     <script>
-        // Default Fallback values if LocalStorage is empty
         const defaultData = {
             user: "Muhammad Hasnain",
             game: "Blox Fruits",
             desc: "Joki Cursed Dual Katana (CDK) Full Gear Max Level",
             price: "27.00",
             currency: "RM",
-            bg: ""
+            bg: "",
+            bgFile: ""
         };
 
         function generateRandomCode() {
@@ -218,7 +280,68 @@
             return `H4SX-${result}`;
         }
 
-        // SAVE DATA TO LOCAL STORAGE ON TAIP / INPUT CHANGED
+        // ---------- Background source mode (upload vs URL) ----------
+        let bgSourceMode = 'upload'; // 'upload' | 'url'
+        let bgUploadDataUrl = '';    // base64 data URL of uploaded file (safe for canvas export)
+
+        function setBgMode(mode) {
+            bgSourceMode = mode;
+            document.getElementById('segUpload').classList.toggle('active', mode === 'upload');
+            document.getElementById('segUrl').classList.toggle('active', mode === 'url');
+            document.getElementById('segUrl').classList.toggle('text-slate-400', mode === 'upload');
+            document.getElementById('segUpload').classList.toggle('text-slate-400', mode === 'url');
+            document.getElementById('uploadPane').classList.toggle('hidden', mode !== 'upload');
+            document.getElementById('urlPane').classList.toggle('hidden', mode !== 'url');
+            localStorage.setItem('h4sx_bgmode', mode);
+            renderReceiptCardOnly();
+        }
+
+        document.getElementById('segUpload').addEventListener('click', () => setBgMode('upload'));
+        document.getElementById('segUrl').addEventListener('click', () => setBgMode('url'));
+
+        function handleFile(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                triggerToast('FAIL TIDAK SAH', 'Sila pilih fail imej (PNG, JPG, atau WebP).', 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                bgUploadDataUrl = e.target.result;
+                localStorage.setItem('h4sx_bgfile', bgUploadDataUrl);
+                document.getElementById('fileNameLabel').innerText = file.name;
+                document.getElementById('clearBgBtn').classList.remove('hidden');
+                renderReceiptCardOnly();
+            };
+            reader.onerror = () => {
+                triggerToast('GAGAL BACA FAIL', 'Cuba muat naik semula gambar tersebut.', 'error');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('inputBgFile').addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+
+        const dropZone = document.getElementById('uploadDrop');
+        ['dragover', 'dragenter'].forEach(evt => {
+            dropZone.addEventListener(evt, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        });
+        ['dragleave', 'drop'].forEach(evt => {
+            dropZone.addEventListener(evt, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+        });
+        dropZone.addEventListener('drop', (e) => {
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+        });
+
+        document.getElementById('clearBgBtn').addEventListener('click', () => {
+            bgUploadDataUrl = '';
+            localStorage.removeItem('h4sx_bgfile');
+            document.getElementById('fileNameLabel').innerText = '';
+            document.getElementById('clearBgBtn').classList.add('hidden');
+            renderReceiptCardOnly();
+        });
+
+        // ---------- Auto-save text inputs ----------
         function autoSaveAllInputs() {
             localStorage.setItem('h4sx_user', document.getElementById('inputUser').value);
             localStorage.setItem('h4sx_game', document.getElementById('inputGame').value);
@@ -226,27 +349,32 @@
             localStorage.setItem('h4sx_price', document.getElementById('inputPrice').value);
             localStorage.setItem('h4sx_currency', document.getElementById('inputCurrency').value);
             localStorage.setItem('h4sx_bg', document.getElementById('inputBg').value);
-            
-            // Re-render matching UI cards instantly
             renderReceiptCardOnly();
         }
 
-        // Setup input change event listeners
         const inputIds = ['inputUser', 'inputGame', 'inputDesc', 'inputPrice', 'inputCurrency', 'inputBg'];
         inputIds.forEach(id => {
             document.getElementById(id).addEventListener('input', autoSaveAllInputs);
         });
 
-        // LOAD DATA FROM STORAGE
         function loadSavedData() {
-            document.getElementById('inputUser').value = localStorage.getItem('h4sx_user') !== null ? localStorage.getItem('h4sx_user') : defaultData.user;
-            document.getElementById('inputGame').value = localStorage.getItem('h4sx_game') !== null ? localStorage.getItem('h4sx_game') : defaultData.game;
-            document.getElementById('inputDesc').value = localStorage.getItem('h4sx_desc') !== null ? localStorage.getItem('h4sx_desc') : defaultData.desc;
-            document.getElementById('inputPrice').value = localStorage.getItem('h4sx_price') !== null ? localStorage.getItem('h4sx_price') : defaultData.price;
-            document.getElementById('inputCurrency').value = localStorage.getItem('h4sx_currency') !== null ? localStorage.getItem('h4sx_currency') : defaultData.currency;
-            document.getElementById('inputBg').value = localStorage.getItem('h4sx_bg') !== null ? localStorage.getItem('h4sx_bg') : defaultData.bg;
+            document.getElementById('inputUser').value = localStorage.getItem('h4sx_user') ?? defaultData.user;
+            document.getElementById('inputGame').value = localStorage.getItem('h4sx_game') ?? defaultData.game;
+            document.getElementById('inputDesc').value = localStorage.getItem('h4sx_desc') ?? defaultData.desc;
+            document.getElementById('inputPrice').value = localStorage.getItem('h4sx_price') ?? defaultData.price;
+            document.getElementById('inputCurrency').value = localStorage.getItem('h4sx_currency') ?? defaultData.currency;
+            document.getElementById('inputBg').value = localStorage.getItem('h4sx_bg') ?? defaultData.bg;
 
-            // Retain old Transaction Code and Date if stored, else make new one
+            const savedFile = localStorage.getItem('h4sx_bgfile');
+            if (savedFile) {
+                bgUploadDataUrl = savedFile;
+                document.getElementById('clearBgBtn').classList.remove('hidden');
+                document.getElementById('fileNameLabel').innerText = 'Gambar tersimpan';
+            }
+
+            const savedMode = localStorage.getItem('h4sx_bgmode') || 'upload';
+            setBgMode(savedMode);
+
             if (!localStorage.getItem('h4sx_code')) {
                 localStorage.setItem('h4sx_code', generateRandomCode());
             }
@@ -263,11 +391,10 @@
             const desc = document.getElementById('inputDesc').value || 'Tiada deskripsi item ditawarkan.';
             const price = parseFloat(document.getElementById('inputPrice').value || 0).toFixed(2);
             const currency = document.getElementById('inputCurrency').value;
-            const bgUrl = document.getElementById('inputBg').value.trim();
 
             let currencySymbol = 'RM ';
-            if(currency === 'USD') currencySymbol = '$ ';
-            if(currency === 'RP') currencySymbol = 'Rp ';
+            if (currency === 'USD') currencySymbol = '$ ';
+            if (currency === 'RP') currencySymbol = 'Rp ';
 
             document.getElementById('resitUser').innerText = user;
             document.getElementById('resitGame').innerText = game;
@@ -276,9 +403,16 @@
 
             const receiptCard = document.getElementById('receiptCard');
             const bgOverlay = document.getElementById('bgOverlay');
-            
-            if(bgUrl) {
-                receiptCard.style.backgroundImage = `url('${bgUrl}')`;
+
+            let activeBg = '';
+            if (bgSourceMode === 'upload' && bgUploadDataUrl) {
+                activeBg = bgUploadDataUrl;
+            } else if (bgSourceMode === 'url') {
+                activeBg = document.getElementById('inputBg').value.trim();
+            }
+
+            if (activeBg) {
+                receiptCard.style.backgroundImage = `url('${activeBg}')`;
                 bgOverlay.style.opacity = "0.91";
             } else {
                 receiptCard.style.backgroundImage = "none";
@@ -286,15 +420,13 @@
             }
         }
 
-        // Executed ONLY when pressing the "Generate Kod Resit Baru" button
         function resetAndGenerateNew() {
             const newCode = generateRandomCode();
             localStorage.setItem('h4sx_code', newCode);
             document.getElementById('resitCode').innerText = newCode;
-            triggerToast('KOD DIJANA!', 'Kod transaksi baharu telah berjaya dikemas kini!', 'success');
+            triggerToast('KOD DIJANA', 'Kod transaksi baharu telah dikemas kini.', 'success');
         }
 
-        // BULLETPROOF COPY TEXT (With Native & Legacy Textarea Fallbacks)
         function copyToClipboard() {
             const code = document.getElementById('resitCode').innerText;
             const date = document.getElementById('resitDate').innerText;
@@ -303,124 +435,145 @@
             const desc = document.getElementById('resitDesc').innerText;
             const price = document.getElementById('resitPrice').innerText;
 
-            const textToCopy = 
+            const textToCopy =
 `=================================
-       RESIT RASMI H4SX STORE      
+       RESIT JUALAN H4SX STORE
 =================================
-🌐 SITE       : h4sx-store.vercel.app
-🔖 KOD TX     : ${code}
-📅 TARIKH     : ${date}
-👤 USER/BUYER : ${user}
-🎮 GAME       : ${game}
-📦 ITEM/SERV  : ${desc}
-💰 TOTAL PAID : ${price}
-=================================
-⚡ STATUS VERIFIED — H4SX STORE ✔️`;
+SITE          : h4sx-store.vercel.app
+KOD TX        : ${code}
+TARIKH        : ${date}
+PEMBELI       : ${user}
+GAME          : ${game}
+ITEM/SERV     : ${desc}
+JUMLAH BAYAR  : ${price}
+=================================`;
 
-            // Try modern method first
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(textToCopy).then(() => {
-                    triggerToast('TEKS COPIED!', 'Butiran resit teks berjaya disalin ke clipboard.', 'success');
+                    triggerToast('TEKS DISALIN', 'Butiran resit berjaya disalin ke clipboard.', 'success');
                 }).catch(() => fallbackCopyText(textToCopy));
             } else {
                 fallbackCopyText(textToCopy);
             }
         }
 
-        // Legacy background backup string copier if security blocks modern api on local files
         function fallbackCopyText(text) {
             const textArea = document.createElement("textarea");
             textArea.value = text;
-            textArea.style.position = "fixed";  // Avoid scrolling down window frame view
+            textArea.style.position = "fixed";
             document.body.appendChild(textArea);
             textArea.focus();
             textArea.select();
             try {
                 document.execCommand('copy');
-                triggerToast('TEKS COPIED (FALLBACK)!', 'Butiran resit teks disalin melalui mod selamat.', 'success');
+                triggerToast('TEKS DISALIN', 'Disalin melalui mod fallback pelayar.', 'success');
             } catch (err) {
-                alert('Gagal menyalin teks. Sila salin secara manual.');
+                triggerToast('GAGAL SALIN', 'Sila salin teks secara manual.', 'error');
             }
             document.body.removeChild(textArea);
         }
 
-        // ADVANCED IMAGE COPY (Handles alerts explicitly for Local vs Live server constraints)
-        function copyReceiptImage() {
+        // ---------- Image export (copy + download) with real error diagnosis ----------
+        function renderCanvas() {
             const receipt = document.getElementById('receiptCard');
-            
-            html2canvas(receipt, {
+            return html2canvas(receipt, {
                 useCORS: true,
+                allowTaint: false,
                 scale: 3,
-                backgroundColor: "#050814",
+                backgroundColor: "#080a10",
                 logging: false
-            }).then(canvas => {
+            });
+        }
+
+        function explainExportFailure(err) {
+            const usingExternalUrl = bgSourceMode === 'url' && document.getElementById('inputBg').value.trim();
+            if (usingExternalUrl) {
+                triggerToast(
+                    'GAMBAR LUAR SEKAT EXPORT',
+                    'Link gambar tu tak benarkan akses silang (CORS), jadi pelayar sekat eksport. Tukar ke tab "Muat Naik" dan pilih fail dari peranti anda.',
+                    'error'
+                );
+            } else if (!window.ClipboardItem) {
+                triggerToast(
+                    'PELAYAR TAK SOKONG',
+                    'Pelayar ini tak sokong salin imej terus. Guna butang Muat Turun PNG sebagai gantinya.',
+                    'error'
+                );
+            } else {
+                triggerToast(
+                    'EKSPORT GAGAL',
+                    'Sesuatu menghalang eksport imej. Cuba Muat Turun PNG, atau guna gambar lain.',
+                    'error'
+                );
+            }
+        }
+
+        function copyReceiptImage() {
+            renderCanvas().then(canvas => {
                 canvas.toBlob(blob => {
-                    if (!blob) return;
-                    
+                    if (!blob) {
+                        explainExportFailure(new Error('blob null — likely tainted canvas'));
+                        return;
+                    }
                     try {
                         const item = new ClipboardItem({ "image/png": blob });
                         navigator.clipboard.write([item]).then(() => {
-                            triggerToast('GAMBAR COPIED!', 'Gambar resit disalin! Sedia paste (Ctrl+V) ke chat.', 'success');
-                        }).catch(err => {
-                            // Trigger dynamic informative warning toast panel 
-                            triggerToast('SEKATAN BROWSER!', 'Gagal copy gambar sebab bro buka fail lokal desktop (file://). Sila klik butang Muat Turun Gambar di bawah atau upload fail ke Vercel/Netlify!', 'error');
+                            triggerToast('GAMBAR DISALIN', 'Sedia untuk paste (Ctrl+V) ke mana-mana chat.', 'success');
+                        }).catch(() => {
+                            explainExportFailure(new Error('clipboard write rejected'));
                         });
-                    } catch(e) {
-                        triggerToast('SEKATAN BROWSER!', 'Sila muat turun fail gambar menggunakan butang biru di bawah jika dilayari secara lokal!', 'error');
+                    } catch (e) {
+                        explainExportFailure(e);
                     }
                 }, 'image/png');
-            });
+            }).catch(explainExportFailure);
         }
 
         function downloadReceiptImage() {
-            const receipt = document.getElementById('receiptCard');
             const code = document.getElementById('resitCode').innerText;
-
-            html2canvas(receipt, {
-                useCORS: true,
-                scale: 3,
-                backgroundColor: "#050814",
-                logging: false
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `H4SX-RECEIPT-${code}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-                triggerToast('DOWNLOAD BERJAYA', 'Fail imej resit HD disimpan secara lokal.', 'success');
-            });
+            renderCanvas().then(canvas => {
+                try {
+                    const link = document.createElement('a');
+                    link.download = `H4SX-RECEIPT-${code}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    triggerToast('DIMUAT TURUN', 'Fail imej resit disimpan secara lokal.', 'success');
+                } catch (e) {
+                    explainExportFailure(e);
+                }
+            }).catch(explainExportFailure);
         }
 
-        // ADVANCED SMART TOAST CONTROLLER (Accepts status color variants)
         function triggerToast(title, message, type = 'success') {
             const toast = document.getElementById('toastNotification');
             const border = document.getElementById('toastBorder');
             const iconBg = document.getElementById('toastIconBg');
             const icon = document.getElementById('toastIcon');
-            
+
             document.getElementById('toastTitle').innerText = title;
             document.getElementById('toastMessage').innerText = message;
-            
-            // Adjust warning styling variations depending on error status flags
-            if(type === 'error') {
-                border.className = "bg-slate-900/95 backdrop-blur-md border-2 border-amber-500 rounded-2xl p-4 shadow-2xl flex items-center gap-4 max-w-sm";
-                iconBg.className = "w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400 text-lg shrink-0";
-                icon.className = "fa-solid fa-triangle-exclamation animate-bounce";
+
+            if (type === 'error') {
+                border.className = "bg-[#0c1018]/95 backdrop-blur-md border border-amber-400/40 rounded-2xl p-4 shadow-2xl flex items-start gap-3 max-w-sm";
+                iconBg.className = "w-9 h-9 rounded-xl bg-amber-400/15 flex items-center justify-center text-amber-300 text-sm shrink-0 mt-0.5";
+                icon.className = "fa-solid fa-triangle-exclamation";
             } else {
-                border.className = "bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500 rounded-2xl p-4 shadow-2xl flex items-center gap-4 max-w-sm";
-                iconBg.className = "w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-lg shrink-0";
-                icon.className = "fa-solid fa-circle-check animate-pulse";
+                border.className = "bg-[#0c1018]/95 backdrop-blur-md border border-emerald-400/40 rounded-2xl p-4 shadow-2xl flex items-start gap-3 max-w-sm";
+                iconBg.className = "w-9 h-9 rounded-xl bg-emerald-400/15 flex items-center justify-center text-emerald-300 text-sm shrink-0 mt-0.5";
+                icon.className = "fa-solid fa-circle-check";
             }
-            
+
             toast.classList.remove('translate-x-80', 'opacity-0');
             toast.classList.add('translate-x-0', 'opacity-100');
-            
-            setTimeout(() => {
+
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
                 toast.classList.remove('translate-x-0', 'opacity-100');
                 toast.classList.add('translate-x-80', 'opacity-0');
-            }, 4000);
+            }, type === 'error' ? 6000 : 4000);
         }
 
-        window.onload = function() {
+        window.onload = function () {
             loadSavedData();
             renderReceiptCardOnly();
         };
